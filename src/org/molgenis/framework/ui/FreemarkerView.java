@@ -12,7 +12,9 @@ import org.molgenis.framework.ui.html.WidgetFactory;
 import org.molgenis.model.elements.Field;
 
 import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.MultiTemplateLoader;
+import freemarker.cache.TemplateLoader;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
 
@@ -74,7 +76,7 @@ public class FreemarkerView extends SimpleScreenView<ScreenModel>
 				conf = new freemarker.template.Configuration();
 				conf.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
 
-				List<ClassTemplateLoader> loaders = new ArrayList<ClassTemplateLoader>();
+				List<TemplateLoader> loaders = new ArrayList<TemplateLoader>();
 
 				// create template loader
 				// load templates from MOLGENIS
@@ -82,6 +84,9 @@ public class FreemarkerView extends SimpleScreenView<ScreenModel>
 				// load templates from plugins, can be anywere
 				// (nb this method is deprecated but I can't see why)
 				loaders.add(new ClassTemplateLoader());
+				
+				//file
+				loaders.add(new FileTemplateLoader());
 
 				for (Object key : templateArgs.keySet())
 				{
@@ -98,7 +103,7 @@ public class FreemarkerView extends SimpleScreenView<ScreenModel>
 				// Object.class, "");
 				// ClassTemplateLoader loader2 = new ClassTemplateLoader(
 				// getClass().getSuperclass(), "");
-				MultiTemplateLoader mLoader = new MultiTemplateLoader(loaders.toArray(new ClassTemplateLoader[loaders
+				MultiTemplateLoader mLoader = new MultiTemplateLoader(loaders.toArray(new TemplateLoader[loaders
 						.size()]));
 				conf.setTemplateLoader(mLoader);
 				logger.debug("created freemarker config");
