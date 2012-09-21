@@ -1,9 +1,20 @@
 package org.molgenis.util;
 
-import ch.ethz.ssh2.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import ch.ethz.ssh2.ChannelCondition;
+import ch.ethz.ssh2.Connection;
+import ch.ethz.ssh2.InteractiveCallback;
+import ch.ethz.ssh2.LocalPortForwarder;
+import ch.ethz.ssh2.SCPClient;
+import ch.ethz.ssh2.Session;
 
 /**
  * Wrapper arround ssh. Build on top of
@@ -91,6 +102,11 @@ public class Ssh
 
 			if (isAuthenticated == false)
 			{
+				isAuthenticated = conn.authenticateWithPublicKey(username, new File("~/.ssh/clusterKey_dsa"), password);
+			}
+
+			if (isAuthenticated == false)
+			{
 				throw new IOException("Authentication failed.");
 			}
 
@@ -138,7 +154,7 @@ public class Ssh
 			InputStream stdout = sess.getStdout();
 			InputStream stderr = sess.getStderr();
 
-			//sess.startShell()
+			// sess.startShell()
 			sess.execCommand(command);
 
 			byte[] buffer = new byte[8192];
@@ -264,7 +280,7 @@ public class Ssh
 		if (remoteFile.contains("/"))
 		{
 			String dir = remoteFile.substring(0, remoteFile.lastIndexOf("/"));
-			String file = remoteFile.substring(remoteFile.lastIndexOf("/")+1);
+			String file = remoteFile.substring(remoteFile.lastIndexOf("/") + 1);
 			scp.put(localFile.getAbsolutePath(), file, dir, "0600");
 		}
 		else
@@ -278,10 +294,13 @@ public class Ssh
 		logger.debug("upload file complete");
 	}
 
-	/** Upload string to remote file. 
+	/**
+	 * Upload string to remote file.
 	 * 
-	 * @param string to upload
-	 * @param remoteFile full path including directories
+	 * @param string
+	 *            to upload
+	 * @param remoteFile
+	 *            full path including directories
 	 * @throws IOException
 	 */
 	public void uploadStringToFile(String string, String remoteFile) throws IOException
@@ -289,11 +308,11 @@ public class Ssh
 		logger.debug("upload string to remote file '" + remoteFile + "'");
 
 		SCPClient scp = conn.createSCPClient();
-		
+
 		if (remoteFile.contains("/"))
 		{
 			String dir = remoteFile.substring(0, remoteFile.lastIndexOf("/"));
-			String file = remoteFile.substring(remoteFile.lastIndexOf("/")+1);
+			String file = remoteFile.substring(remoteFile.lastIndexOf("/") + 1);
 			scp.put(string.getBytes(), file, dir, "0600");
 		}
 		else
@@ -304,17 +323,20 @@ public class Ssh
 
 	}
 
-
-	/** Upload a string using scp, with seperate directory and file parameters.
+	/**
+	 * Upload a string using scp, with seperate directory and file parameters.
 	 * 
-	 * @param string to upload
-	 * @param remoteFile only the file name
-	 * @param remoteDir path to the directory
+	 * @param string
+	 *            to upload
+	 * @param remoteFile
+	 *            only the file name
+	 * @param remoteDir
+	 *            path to the directory
 	 * @throws IOException
 	 */
 	public void uploadStringToFile(String string, String remoteFile, String remoteDir) throws IOException
 	{
-		if(!"".equals(remoteDir))
+		if (!"".equals(remoteDir))
 		{
 			this.uploadStringToFile(string, remoteDir + "/" + remoteFile);
 		}
@@ -322,9 +344,9 @@ public class Ssh
 		{
 			this.uploadStringToFile(string, remoteFile);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Download remote file to local file via scp
 	 * 
@@ -421,6 +443,5 @@ public class Ssh
 
 		return out.toString();
 	}
-
 
 }
