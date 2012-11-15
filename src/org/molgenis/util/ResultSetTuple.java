@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
  */
 public class ResultSetTuple extends SimpleTuple
 {
-	private static final transient Logger logger = Logger.getLogger(ResultSetTuple.class);
+	private static final Logger logger = Logger.getLogger(ResultSetTuple.class);
 
 	/** JDBC Resultset wrapped by this Tuple. */
 	private ResultSet resultset;
@@ -67,6 +67,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public int getNrColumns()
 	{
 		try
@@ -84,12 +85,14 @@ public class ResultSetTuple extends SimpleTuple
 	 * 
 	 * @return
 	 */
+	@Override
 	@Deprecated
 	public List<String> getFields()
 	{
 		return getFieldNames();
 	}
 
+	@Override
 	public List<String> getFieldNames()
 	{
 		if (fieldNames == null)
@@ -147,6 +150,7 @@ public class ResultSetTuple extends SimpleTuple
 	/**
 	 * @deprecated Unsupported operation for a JDBCTuple
 	 */
+	@Override
 	public void set(String columnName, Object value)
 	{
 		throw new UnsupportedOperationException("set(String,Object) failed: cannot set values on a "
@@ -156,6 +160,7 @@ public class ResultSetTuple extends SimpleTuple
 	/**
 	 * @deprecated Unsupported operation for a JDBCTuple
 	 */
+	@Override
 	public void set(int columnIndex, Object value)
 	{
 		throw new UnsupportedOperationException("set(int,Object) failed: Cannot set values on a "
@@ -166,6 +171,7 @@ public class ResultSetTuple extends SimpleTuple
 	/**
 	 * @deprecated Unsupported operation for a JDBCTuple
 	 */
+	@Override
 	public void set(Object[] values)
 	{
 		throw new UnsupportedOperationException("set(Object[]) failed: Cannot set values on a "
@@ -173,6 +179,7 @@ public class ResultSetTuple extends SimpleTuple
 
 	}
 
+	@Override
 	public Integer getInt(int columnIndex)
 	{
 		try
@@ -188,14 +195,18 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Integer getInt(String columnName)
 	{
 		try
 		{
-			if (resultset.getObject(columnName) == null) {
+			if (resultset.getObject(columnName) == null)
+			{
 				// watchout, null != false!
 				return null;
-			} else {
+			}
+			else
+			{
 				return resultset.getInt(columnName);
 			}
 		}
@@ -205,6 +216,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Long getLong(int columnIndex)
 	{
 		try
@@ -217,6 +229,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Long getLong(String columnName)
 	{
 		try
@@ -229,6 +242,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Boolean getBoolean(int columnIndex)
 	{
 		try
@@ -248,6 +262,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Boolean getBoolean(String columnName)
 	{
 		try
@@ -267,6 +282,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Double getDecimal(int columnIndex)
 	{
 		try
@@ -282,6 +298,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Double getDecimal(String columnName)
 	{
 		try
@@ -297,6 +314,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public String getString(int columnIndex)
 	{
 		try
@@ -309,6 +327,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public String getString(String columnName)
 	{
 		try
@@ -321,6 +340,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Object getObject(int columnIndex)
 	{
 		try
@@ -333,6 +353,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Object getObject(String columnName)
 	{
 		try
@@ -345,6 +366,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public java.sql.Date getDate(String columnName)
 	{
 		try
@@ -357,6 +379,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Date getDate(int columnIndex) throws ParseException
 	{
 		try
@@ -369,6 +392,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Timestamp getTimestamp(String columnName)
 	{
 		try
@@ -381,6 +405,7 @@ public class ResultSetTuple extends SimpleTuple
 		}
 	}
 
+	@Override
 	public Timestamp getTimestamp(int columnIndex)
 	{
 		try
@@ -396,6 +421,7 @@ public class ResultSetTuple extends SimpleTuple
 	/**
 	 * @deprecated Unsupported operation for a JDBCTuple
 	 */
+	@Override
 	public List<?> getList(String columnName)
 	{
 		throw new UnsupportedOperationException("getList(String) failed: cannot retrieve a list from a "
@@ -405,6 +431,7 @@ public class ResultSetTuple extends SimpleTuple
 	/**
 	 * @deprecated Unsupported operation for a JDBCTuple
 	 */
+	@Override
 	public List<?> getList(int columnIndex)
 	{
 		throw new UnsupportedOperationException("getList(int) failed: cannot retrieve a list from a "

@@ -12,6 +12,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
@@ -105,17 +106,19 @@ public class SimpleTuple implements Tuple
 
 	public SimpleTuple(Map<String, Object> valueMap)
 	{
-		for (String key : valueMap.keySet())
+		for (Entry<String, Object> entry : valueMap.entrySet())
 		{
-			this.set(key, valueMap.get(key));
+			this.set(entry.getKey(), entry.getValue());
 		}
 	}
 
+	@Override
 	public int getNrColumns()
 	{
 		return values.size();
 	}
 
+	@Override
 	public List<String> getFieldNames()
 	{
 		// return a copy of the keys
@@ -127,6 +130,7 @@ public class SimpleTuple implements Tuple
 	 * 
 	 * @return
 	 */
+	@Override
 	@Deprecated
 	public List<String> getFields()
 	{
@@ -154,6 +158,7 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public Object getObject(int column)
 	{
 		try
@@ -166,6 +171,7 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public Object getObject(String column)
 	{
 		String lowerCase = column.toLowerCase().trim();
@@ -176,6 +182,7 @@ public class SimpleTuple implements Tuple
 		return null;
 	}
 
+	@Override
 	public void set(int column, Object value)
 	{
 		// update existing
@@ -190,6 +197,7 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public void set(String column, Object value)
 	{
 		if (column == null)
@@ -212,6 +220,7 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public void set(Object[] values)
 	{
 		for (int i = 0; i < values.length; i++)
@@ -220,6 +229,7 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public <E> void set(List<E> values)
 	{
 		for (int i = 0; i < values.size(); i++)
@@ -228,9 +238,10 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public Integer getInt(int column)
 	{
-		if (getObject(column) == null || getString(column).equals("")) return null;
+		if (getObject(column) == null || getString(column).isEmpty()) return null;
 		try
 		{
 			return Integer.valueOf(getString(column));
@@ -242,9 +253,10 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public Integer getInt(String column)
 	{
-		if (getObject(column) == null || getString(column).equals("")) return null;
+		if (getObject(column) == null || getString(column).isEmpty()) return null;
 		try
 		{
 			return Integer.valueOf(getString(column));
@@ -256,6 +268,7 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public Integer getOnoff(String column)
 	{
 		if (getObject(column) == null) return 0;
@@ -265,9 +278,10 @@ public class SimpleTuple implements Tuple
 		return 0;
 	}
 
+	@Override
 	public Long getLong(int column)
 	{
-		if (getObject(column) == null || getString(column).equals("")) return null;
+		if (getObject(column) == null || getString(column).isEmpty()) return null;
 		try
 		{
 			return Long.valueOf(getString(column));
@@ -279,9 +293,10 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public Long getLong(String column)
 	{
-		if (getObject(column) == null || getString(column).equals("")) return null;
+		if (getObject(column) == null || getString(column).isEmpty()) return null;
 		try
 		{
 			return Long.valueOf(getString(column));
@@ -306,23 +321,28 @@ public class SimpleTuple implements Tuple
 
 	}
 
+	@Override
+	@edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_BOOLEAN_RETURN_NULL", justification = "Could be null under some circumstances")
 	public Boolean getBoolean(int column)
 	{
-		if (getObject(column) == null || getString(column).equals("")) return null;
+		if (getObject(column) == null || getString(column).isEmpty()) return null;
 		return Boolean.valueOf(getString(column).toLowerCase().equals("true") || getString(column).trim().equals("1")
 				|| getString(column).trim().equalsIgnoreCase("on"));
 	}
 
+	@Override
+	@edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_BOOLEAN_RETURN_NULL", justification = "Could be null under some circumstances")
 	public Boolean getBoolean(String column)
 	{
-		if (getObject(column) == null || getString(column).equals("")) return null;
+		if (getObject(column) == null || getString(column).isEmpty()) return null;
 		return Boolean.valueOf(getString(column).toLowerCase().equals("true") || getString(column).trim().equals("1")
 				|| getString(column).trim().equalsIgnoreCase("on"));
 	}
 
+	@Override
 	public Double getDecimal(int column)
 	{
-		if (getObject(column) == null || getString(column).equals("")) return null;
+		if (getObject(column) == null || getString(column).isEmpty()) return null;
 		try
 		{
 			return Double.valueOf(getString(column));
@@ -334,9 +354,10 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public Double getDecimal(String column)
 	{
-		if (getObject(column) == null || getString(column).equals("")) return null;
+		if (getObject(column) == null || getString(column).isEmpty()) return null;
 		try
 		{
 			return new Double(getString(column));
@@ -348,6 +369,7 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public String getString(int column)
 	{
 		if (getObject(column) == null) return null; // MySql allows not-null
@@ -360,6 +382,7 @@ public class SimpleTuple implements Tuple
 	 * Using the IUB codes for nucleotides
 	 * http://www.tigr.org/tdb/CMR/IUBcodes.html
 	 */
+	@Override
 	public String getNSequence(String column) throws ParseException
 	{
 		if (getObject(column) == null) return null; // MySql allows not-null
@@ -407,16 +430,16 @@ public class SimpleTuple implements Tuple
 
 		String result = this.getString(column);
 		String[] lines = result.split("\\n");
-		String cleanresult = "";
+		StringBuilder cleanresultBuilder = new StringBuilder();
 		for (int i = 0; i < lines.length; i++)
 		{
 			String line = lines[i];
 			line = line.replaceAll("\\s", "");
 			line = line.replaceAll("^[0-9]*", "");
-			cleanresult += line;
+			cleanresultBuilder.append(line);
 		}
 
-		result = cleanresult;
+		result = cleanresultBuilder.toString();
 
 		Vector<Integer> nonIUBpos = new Vector<Integer>();
 
@@ -429,37 +452,46 @@ public class SimpleTuple implements Tuple
 		}
 		if (nonIUBpos.size() > 0)
 		{
-			String invalid = "there are " + nonIUBpos.size() + " non-IUB characters in your sequence.";
+			StringBuilder invalidBuilder = new StringBuilder();
+			invalidBuilder.append("there are ").append(nonIUBpos.size())
+					.append(" non-IUB characters in your sequence.");
 			for (Integer pos : nonIUBpos)
 			{
-				invalid += " '" + result.charAt(pos) + "' on position " + (pos + 1) + ".";
+				invalidBuilder.append(" '").append(result.charAt(pos)).append("' on position ");
+				invalidBuilder.append(pos + 1).append('.');
 			}
-			throw new ParseException(invalid, 0);
+			throw new ParseException(invalidBuilder.toString(), 0);
 		}
 		return result;
 	}
 
+	@Override
 	public String getString(String column)
 	{
 		if (getObject(column) == null) return null;
 		return getObject(column).toString().trim();
 	}
 
+	@Override
+	@edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_BOOLEAN_RETURN_NULL", justification = "Could be null under some circumstances")
 	public Boolean getBool(int column)
 	{
-		if (getObject(column) == null || getString(column).equals("")) return null;
+		if (getObject(column) == null || getString(column).isEmpty()) return null;
 		return getBoolean(column);
 	}
 
+	@Override
+	@edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "NP_BOOLEAN_RETURN_NULL", justification = "Could be null under some circumstances")
 	public Boolean getBool(String column)
 	{
-		if (getObject(column) == null || getString(column).equals("")) return null;
+		if (getObject(column) == null || getString(column).isEmpty()) return null;
 		return getBoolean(column);
 	}
 
+	@Override
 	public java.sql.Date getDate(int column) throws ParseException
 	{
-		if (this.getObject(column) == null || this.getString(column).equals("")) return null;
+		if (this.getObject(column) == null || this.getString(column).isEmpty()) return null;
 		if (this.getObject(column) instanceof java.sql.Date) return (java.sql.Date) this.getObject(column);
 		if (this.getObject(column) instanceof java.sql.Timestamp) return (java.sql.Date) this.getObject(column);
 		if (this.getObject(column) instanceof java.util.Date) return new java.sql.Date(
@@ -494,9 +526,10 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public java.sql.Date getDate(String column) throws ParseException
 	{
-		if (this.getObject(column) == null || this.getString(column).equals("")) return null;
+		if (this.getObject(column) == null || this.getString(column).isEmpty()) return null;
 		if (this.getObject(column) instanceof java.sql.Date) return (java.sql.Date) this.getObject(column);
 		if (this.getObject(column) instanceof java.sql.Timestamp) return (java.sql.Date) this.getObject(column);
 		if (this.getObject(column) instanceof java.util.Date) return new java.sql.Date(
@@ -532,55 +565,60 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public Double getDouble(int column)
 	{
 		return getDecimal(column);
 	}
 
+	@Override
 	public Double getDouble(String column)
 	{
 		return getDecimal(column);
 	}
 
+	@Override
 	public String toString()
 	{
 		if (this.getNrColumns() == 0) return "EMPTY TUPLE";
-		String result = "";
+		StringBuilder resultBuilder = new StringBuilder();
 		for (int columnIndex = 0; columnIndex < this.getNrColumns(); columnIndex++)
 		{
 			if (getColName(columnIndex) != null)
 			{
-				result += getColName(columnIndex) + "='" + getObject(columnIndex)
-
-				+ "' ";
+				resultBuilder.append(getColName(columnIndex)).append("='");
+				resultBuilder.append(getObject(columnIndex)).append("' ");
 			}
 			else
 			{
-				result += columnIndex + "='" + getObject(columnIndex) + "' ";
+				resultBuilder.append(columnIndex).append("='").append(getObject(columnIndex)).append("' ");
 			}
 		}
-		if (result.length() > 0)
+		if (resultBuilder.length() > 0)
 		{
-			result = result.substring(0, result.length() - 1);
+			resultBuilder.deleteCharAt(resultBuilder.length() - 1);
 		}
-		return result;
+		return resultBuilder.toString();
 	}
 
+	@Override
 	public File getFile(String string)
 	{
 		if (!isNull(string)) return (File) getObject(string);
 		return null;
 	}
 
+	@Override
 	public File getFile(int column)
 	{
 		if (!isNull(column)) return (File) getObject(column);
 		return null;
 	}
 
+	@Override
 	public Timestamp getTimestamp(String column) throws ParseException
 	{
-		if (this.getObject(column) == null || this.getString(column).equals("")) return null;
+		if (this.getObject(column) == null || this.getString(column).isEmpty()) return null;
 		if (this.getObject(column) instanceof java.sql.Timestamp) return (java.sql.Timestamp) this.getObject(column);
 		try
 		{
@@ -622,9 +660,10 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public Timestamp getTimestamp(int column) throws ParseException
 	{
-		if (this.getObject(column) == null || this.getString(column).equals("")) return null;
+		if (this.getObject(column) == null || this.getString(column).isEmpty()) return null;
 		if (this.getObject(column) instanceof java.sql.Timestamp) return (java.sql.Timestamp) this.getObject(column);
 		try
 		{
@@ -667,16 +706,19 @@ public class SimpleTuple implements Tuple
 		}
 	}
 
+	@Override
 	public List<?> getList(String column)
 	{
 		return this.getList(column, null);
 	}
 
+	@Override
 	public Set<Object> getSet(String column)
 	{
 		return new LinkedHashSet<Object>(this.getList(column, null));
 	}
 
+	@Override
 	public Set<Object> getSet(String column, String sep)
 	{
 		return new LinkedHashSet<Object>(this.getList(column, sep));
@@ -775,6 +817,7 @@ public class SimpleTuple implements Tuple
 		return null;
 	}
 
+	@Override
 	public String getAction()
 	{
 		return this.getString("__action");

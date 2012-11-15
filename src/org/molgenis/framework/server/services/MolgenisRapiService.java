@@ -39,6 +39,7 @@ public class MolgenisRapiService implements MolgenisService
 	 * @param response
 	 * @throws IOException
 	 */
+	@Override
 	public void handleRequest(MolgenisRequest request, MolgenisResponse response) throws IOException
 	{
 		// as used in /molgenis/src/org/molgenis/generators/R/RApiGen.R.ftl,
@@ -205,7 +206,7 @@ public class MolgenisRapiService implements MolgenisService
 			// " from path " + source);
 			if (source.exists())
 			{
-				String str = this.printScript(source.toURI().toURL(), "");
+				String str = this.printScript(source.toURI().toURL());
 				s += (str);
 			}
 			else
@@ -231,18 +232,23 @@ public class MolgenisRapiService implements MolgenisService
 		response.getResponse().flushBuffer();
 	}
 
-	private String printScript(URL source, String out) throws IOException
+	private String printScript(URL source) throws IOException
 	{
-		// Utils.console("reading file to be outputted");
+		StringBuilder strBuilder = new StringBuilder();
 		BufferedReader reader = new BufferedReader(new InputStreamReader(source.openStream()));
-		String sourceLine;
-		while ((sourceLine = reader.readLine()) != null)
+		try
 		{
-			out += sourceLine + "\n";
+			String sourceLine;
+			while ((sourceLine = reader.readLine()) != null)
+			{
+				strBuilder.append(sourceLine).append('\n');
+			}
 		}
-		reader.close();
-		// Utils.console("done reading");
-		return out;
+		finally
+		{
+			reader.close();
+		}
+		return strBuilder.toString();
 	}
 
 }

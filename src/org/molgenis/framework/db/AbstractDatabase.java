@@ -97,7 +97,8 @@ public abstract class AbstractDatabase implements Database
 
 				count++;
 			}
-			logger.debug(String.format("find(%s, writer) wrote %s lines", entityClass.getSimpleName(), count));
+			if (logger.isDebugEnabled()) if (logger.isDebugEnabled()) logger.debug(String.format(
+					"find(%s, writer) wrote %s lines", entityClass.getSimpleName(), count));
 			writer.close();
 		}
 		catch (Exception ex)
@@ -139,7 +140,7 @@ public abstract class AbstractDatabase implements Database
 	 */
 	public boolean executeSql(String sql) throws DatabaseException
 	{
-		logger.info("stmt.execute(" + sql + ")");
+		if (logger.isDebugEnabled()) logger.debug("stmt.execute(" + sql + ")");
 		boolean success = false;
 		Connection conn = getConnection();
 		Statement stmt = null;
@@ -199,7 +200,6 @@ public abstract class AbstractDatabase implements Database
 		{
 			stmt = con.createStatement();
 			stmt.executeUpdate(sql);
-			stmt.close();
 		}
 		catch (Exception e)
 		{
@@ -249,7 +249,7 @@ public abstract class AbstractDatabase implements Database
 		{
 			// get all the value of all keys (composite key)
 			// use an index to hash the entities
-			String combinedKey = "";
+			StringBuilder combinedKeyBuilder = new StringBuilder();
 
 			// extract its key values and put in map
 			Map<String, Object> keyValues = new LinkedHashMap<String, Object>();
@@ -260,20 +260,11 @@ public abstract class AbstractDatabase implements Database
 			for (String key : keyNames)
 			{
 				// create a hash that concats all key values into one string
-				combinedKey += ";" + (entity.get(key) == null ? "" : entity.get(key));
+				combinedKeyBuilder.append(';');
 
-				// if (entity.get(key) == null || entity.get(key).equals(""))
-				// {
-				// if (dbAction.equals(DatabaseAction.UPDATE) ||
-				// dbAction.equals(DatabaseAction.REMOVE))
-				// {
-				// throw new DatabaseException(
-				// entityName + " is missing key '" + key + "' in line " +
-				// entity.toString());
-				// }
-				// }
 				if (entity.get(key) != null)
 				{
+					combinedKeyBuilder.append(entity.get(key));
 					incompleteKey = false;
 					keyValues.put(key, entity.get(key));
 				}
@@ -286,7 +277,7 @@ public abstract class AbstractDatabase implements Database
 			{
 				keyIndex.add(keyValues);
 				// create the entity index using the hash
-				entityIndex.put(combinedKey, entity);
+				entityIndex.put(combinedKeyBuilder.toString(), entity);
 			}
 			else
 			{
@@ -343,13 +334,13 @@ public abstract class AbstractDatabase implements Database
 			for (E p : selectForUpdate)
 			{
 				// reconstruct composite key so we can use the entityIndex
-				String combinedKey = "";
+				StringBuilder combinedKeyBuilder = new StringBuilder();
 				for (String key : keyNames)
 				{
-					combinedKey += ";" + p.get(key);
+					combinedKeyBuilder.append(';').append(p.get(key));
 				}
 				// copy existing from entityIndex to existingEntities
-				entityIndex.remove(combinedKey);
+				entityIndex.remove(combinedKeyBuilder.toString());
 				existingEntities.add(p);
 			}
 			// copy remaining to newEntities
@@ -362,9 +353,11 @@ public abstract class AbstractDatabase implements Database
 		if (existingEntities.size() > 0
 				&& (dbAction == DatabaseAction.ADD_UPDATE_EXISTING || dbAction == DatabaseAction.UPDATE || dbAction == DatabaseAction.UPDATE_IGNORE_MISSING))
 		{
-			logger.info("existingEntities[0] before: " + existingEntities.get(0).toString());
+			if (logger.isDebugEnabled()) logger.debug("existingEntities[0] before: "
+					+ existingEntities.get(0).toString());
 			matchByNameAndUpdateFields(existingEntities, entities);
-			logger.info("existingEntities[0] after: " + existingEntities.get(0).toString());
+			if (logger.isDebugEnabled()) logger.debug("existingEntities[0] after: "
+					+ existingEntities.get(0).toString());
 		}
 
 		switch (dbAction)
@@ -392,17 +385,17 @@ public abstract class AbstractDatabase implements Database
 				// will not test for existing entities before add
 				// (so will ignore existingEntities)
 			case ADD_IGNORE_EXISTING:
-				logger.debug("updateByName(List<" + entityName + "," + dbAction + ">) will skip "
-						+ existingEntities.size() + " existing entities");
+				if (logger.isDebugEnabled()) logger.debug("updateByName(List<" + entityName + "," + dbAction
+						+ ">) will skip " + existingEntities.size() + " existing entities");
 				return add(newEntities);
 
 				// will try to update(existingEntities) entities and
 				// add(missingEntities)
 				// so allows user to be sloppy in adding/updating
 			case ADD_UPDATE_EXISTING:
-				logger.debug("updateByName(List<" + entityName + "," + dbAction + ">)  will try to update "
-						+ existingEntities.size() + " existing entities and add " + newEntities.size()
-						+ " new entities");
+				if (logger.isDebugEnabled()) logger.debug("updateByName(List<" + entityName + "," + dbAction
+						+ ">)  will try to update " + existingEntities.size() + " existing entities and add "
+						+ newEntities.size() + " new entities");
 				return add(newEntities) + update(existingEntities);
 
 				// update while testing for newEntities.size == 0
@@ -421,9 +414,9 @@ public abstract class AbstractDatabase implements Database
 				// those
 				// (so only updates exsiting)
 			case UPDATE_IGNORE_MISSING:
-				logger.debug("updateByName(List<" + entityName + "," + dbAction + ">) will try to update "
-						+ existingEntities.size() + " existing entities and skip " + newEntities.size()
-						+ " new entities");
+				if (logger.isDebugEnabled()) logger.debug("updateByName(List<" + entityName + "," + dbAction
+						+ ">) will try to update " + existingEntities.size() + " existing entities and skip "
+						+ newEntities.size() + " new entities");
 				return update(existingEntities);
 
 				// remove all elements in list, test if no elements are missing
@@ -431,8 +424,8 @@ public abstract class AbstractDatabase implements Database
 			case REMOVE:
 				if (newEntities.size() == 0)
 				{
-					logger.debug("updateByName(List<" + entityName + "," + dbAction + ">) will try to remove "
-							+ existingEntities.size() + " existing entities");
+					if (logger.isDebugEnabled()) logger.debug("updateByName(List<" + entityName + "," + dbAction
+							+ ">) will try to remove " + existingEntities.size() + " existing entities");
 					return remove(existingEntities);
 				}
 				else
@@ -446,9 +439,9 @@ public abstract class AbstractDatabase implements Database
 				// exist in database
 				// (so don't check the newEntities.size == 0)
 			case REMOVE_IGNORE_MISSING:
-				logger.debug("updateByName(List<" + entityName + "," + dbAction + ">) will try to remove "
-						+ existingEntities.size() + " existing entities and skip " + newEntities.size()
-						+ " new entities");
+				if (logger.isDebugEnabled()) logger.debug("updateByName(List<" + entityName + "," + dbAction
+						+ ">) will try to remove " + existingEntities.size() + " existing entities and skip "
+						+ newEntities.size() + " new entities");
 				return remove(existingEntities);
 
 				// unexpected error
@@ -490,6 +483,7 @@ public abstract class AbstractDatabase implements Database
 						// as they are new entities, should include 'id'
 						if (!(newEntity.get(field) == null))
 						{
+							// if(logger.isDebugEnabled())
 							// logger.debug("entity name = " +
 							// newEntity.get("name") + " has null field: " +
 							// field);
@@ -731,7 +725,7 @@ public abstract class AbstractDatabase implements Database
 			String allSql = sql
 					+ (rules.length > 0 ? JDBCQueryGernatorUtil.createWhereSql(null, false, true, rules) : "");
 
-			logger.info("executeQuery: " + allSql);
+			if (logger.isDebugEnabled()) logger.debug("executeQuery: " + allSql);
 			Connection con = getConnection();
 			stmt = con.createStatement();
 
@@ -777,7 +771,7 @@ public abstract class AbstractDatabase implements Database
 			stmt.close();
 			stmt = null;
 
-			logger.info("sql(" + allSql + ")" + tuples.size() + " objects found");
+			if (logger.isDebugEnabled()) logger.debug("sql(" + allSql + ")" + tuples.size() + " objects found");
 			return tuples;
 		}
 		catch (Exception e)

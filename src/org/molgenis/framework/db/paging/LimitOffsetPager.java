@@ -25,7 +25,7 @@ import org.molgenis.util.Entity;
 public class LimitOffsetPager<E extends Entity> extends AbstractPager<E>
 {
 	private static final long serialVersionUID = -1859965580920588085L;
-	private static transient final Logger logger = Logger.getLogger(LimitOffsetPager.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(LimitOffsetPager.class);
 
 	public LimitOffsetPager(Class<E> entityClass, String defaultOrderByField) throws DatabaseException
 	{
@@ -41,6 +41,7 @@ public class LimitOffsetPager<E extends Entity> extends AbstractPager<E>
 	 * 
 	 * @throws ParseException
 	 */
+	@Override
 	public void refresh(Database db) throws DatabaseException
 	{
 		// don't use getters and setters here, or everything refreshes like
@@ -58,10 +59,10 @@ public class LimitOffsetPager<E extends Entity> extends AbstractPager<E>
 		q.addRules(rules);
 		try
 		{
-			for(String fieldName: this.getEntityClass().newInstance().getFields())
+			for (String fieldName : this.getEntityClass().newInstance().getFields())
 			{
-				if(fieldName.equals(Field.TYPE_FIELD))
-					q.equals(Field.TYPE_FIELD, this.getEntityClass().getSimpleName());
+				if (fieldName.equals(Field.TYPE_FIELD)) q.equals(Field.TYPE_FIELD, this.getEntityClass()
+						.getSimpleName());
 			}
 		}
 		catch (InstantiationException e)
@@ -111,7 +112,7 @@ public class LimitOffsetPager<E extends Entity> extends AbstractPager<E>
 				}
 			case LAST:
 				// set it to be the last valid offset
-				if (count > limit) offset = (int)Math.round(Math.floor((count - 1) / limit) * limit);
+				if (count > limit) offset = (int) Math.round(Math.floor((count - 1) / limit) * limit);
 				else
 					offset = 0;
 				logger.debug("handled last, offset: " + offset + ", limit: " + limit + ", count: " + count);

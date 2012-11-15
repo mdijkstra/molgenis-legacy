@@ -16,72 +16,24 @@ import org.apache.log4j.Logger;
  * 
  * @see CsvReader
  */
-public class CsvBufferedReaderMultiline extends AbstractTupleReader implements CsvReader, TupleIterable
+public abstract class CsvBufferedReaderMultiline extends AbstractTupleReader implements CsvReader, TupleIterable
 {
 	/** default separators */
-	public static char[] separators =
+	private static final char[] separators =
 	{ ',', '\t', ';', ' ' };
 
 	/** Wrapper around the resource that is read */
 	protected BufferedReader reader = null;
 
 	/** for log messages */
-	private static final transient Logger logger = Logger.getLogger(CsvFileReader.class.getSimpleName());
-
-	/**
-	 * a matching String that indicates where the Csv starts; empty means first
-	 * line
-	 */
-	private String blockStart = "";
-
-	/**
-	 * a matching String that indicates where the Csv is terminated; empty means
-	 * last line
-	 */
-	private String blockEnd = "";
-
-	/** a string that translates to a null value when parsed */
-	private String missingValueIndicator = "";
-
-	/** cache of the column names, may have duplicates */
-	private List<String> columnnames;
-
-	/** guessed separator */
-	private char separator = 0;
-
-	/** boolean indicating that the resource parsed has headers... */
-	private boolean hasHeader = true;
+	private static final Logger logger = Logger.getLogger(CsvFileReader.class.getSimpleName());
 
 	/** character for escaping " */
 	private char quoteEscape = '"';
 
-	/**
-	 * Constructor
-	 * 
-	 * @param reader
-	 * @throws IOException
-	 * @throws DataFormatException
-	 */
-	public CsvBufferedReaderMultiline(BufferedReader reader) throws IOException, DataFormatException
+	protected CsvBufferedReaderMultiline()
 	{
-		this(reader, true);
-	}
-
-	/**
-	 * Constructor with option to have no headers
-	 * 
-	 * @param reader
-	 * @param hasHeader
-	 * @throws IOException
-	 * @throws DataFormatException
-	 */
-	public CsvBufferedReaderMultiline(BufferedReader reader, boolean hasHeader) throws IOException, DataFormatException
-	{
-		this.reader = reader;
-		this.hasHeader = hasHeader;
-		if (this.hasHeader) headers = colnames();
-		else
-			reader.mark(10000); // because colnames() also places mark
+		// delegate to subclass
 	}
 
 	@Override
@@ -126,23 +78,9 @@ public class CsvBufferedReaderMultiline extends AbstractTupleReader implements C
 		// get the column names as in file
 		List<String> colnames = this.getRow();
 
-		// mark reader so we can reset to first row
-		reader.mark(10000);
-
 		// get data line as comparison to see if we need to add anonymous first
 		// column for data matrix
 		List<String> dataline = this.getRow();
-
-		try
-		{
-			reader.reset();
-		}
-		// happens for big files
-		catch (IOException e)
-		{
-			goToBlockStart(reader);
-			this.getRow();
-		}
 
 		// empty file has empty headers
 		if (dataline == null) return new ArrayList<String>();
@@ -184,19 +122,36 @@ public class CsvBufferedReaderMultiline extends AbstractTupleReader implements C
 		// cache for later use
 		this.columnnames = result;
 
+		// reset
+		this.reset();
+
 		return result;
 	}
 
-	List<String> headers = null;
 	int lineCount = 0;
 
 	@Override
 	public Iterator<Tuple> iterator()
 	{
-		return new TupleIterator(this);
+		try
+		{
+			// make sure columns names are there
+			if (this.hasHeader) this.colnames();
+			// skip to blockstart
+			goToBlockStart(reader);
+			// skip rownames line
+			if (this.hasHeader) this.next();
+			// return the iterator
+			return new TupleIterator(this);
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
 	}
 
-	/** This method gets next tuple, if availabe */
+	/** This method gets next tuple, if available */
+	@Override
 	public Tuple next()
 	{
 		try
@@ -210,7 +165,7 @@ public class CsvBufferedReaderMultiline extends AbstractTupleReader implements C
 				Tuple t;
 				if (hasHeader)
 				{
-					t = new SimpleTuple(headers);
+					t = new SimpleTuple(this.columnnames);
 				}
 				else
 				{
@@ -227,10 +182,10 @@ public class CsvBufferedReaderMultiline extends AbstractTupleReader implements C
 				}
 
 				// parse the row into a tuple
-				if (hasHeader && row.size() > headers.size())
+				if (hasHeader && row.size() > columnnames.size())
 				{
 					throw new Exception("Row " + lineCount + " has more columns than there are headers (" + row.size()
-							+ ">" + headers.size() + "). Put double \" around columns that have '" + separator
+							+ ">" + columnnames.size() + "). Put double \" around columns that have '" + separator
 							+ "' in their value. \nRow is: " + this.rowToString(row));
 				}
 
@@ -248,6 +203,7 @@ public class CsvBufferedReaderMultiline extends AbstractTupleReader implements C
 			}
 
 			// next is null
+			if (reader != null) reader.close();
 			return null;
 		}
 		catch (Exception e)
@@ -427,6 +383,7 @@ public class CsvBufferedReaderMultiline extends AbstractTupleReader implements C
 				currentRecord += "\n";
 			}
 		}
+
 		return null;
 	}
 
@@ -468,12 +425,14 @@ public class CsvBufferedReaderMultiline extends AbstractTupleReader implements C
 	}
 
 	// @Override
+	@Override
 	public void setMissingValues(String missingValue)
 	{
 		this.missingValueIndicator = missingValue;
 	}
 
 	// @Override
+	@Override
 	public String getMissingValues()
 	{
 		return this.missingValueIndicator;
@@ -492,6 +451,7 @@ public class CsvBufferedReaderMultiline extends AbstractTupleReader implements C
 
 	}
 
+	@Override
 	public void renameField(String from, String to) throws Exception
 	{
 		List<String> colnames = this.colnames();
@@ -512,9 +472,19 @@ public class CsvBufferedReaderMultiline extends AbstractTupleReader implements C
 	}
 
 	@Override
-	public void reset() throws IOException, DataFormatException
+	public void reset() throws IOException
 	{
-		reader.reset();
+		if (this.hasHeader)
+		{
+			try
+			{
+				this.columnnames = colnames();
+			}
+			catch (DataFormatException e)
+			{
+				throw new IOException(e);
+			}
+		}
 	}
 
 	@Override

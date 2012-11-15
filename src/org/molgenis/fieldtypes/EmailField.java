@@ -13,10 +13,10 @@ public class EmailField extends FieldType
 	@Override
 	public String getJavaAssignment(String value) throws MolgenisModelException
 	{
-		if(value == null || value.equals("") ) return "null";
-		return "\""+value+"\"";
+		if (value == null || value.equals("")) return "null";
+		return "\"" + value + "\"";
 	}
-	
+
 	@Override
 	public String getJavaPropertyDefault() throws MolgenisModelException
 	{
@@ -34,7 +34,7 @@ public class EmailField extends FieldType
 	{
 		return "VARCHAR(255)";
 	}
-	
+
 	@Override
 	public String getOracleType() throws MolgenisModelException
 	{
@@ -46,6 +46,7 @@ public class EmailField extends FieldType
 	{
 		return "VARCHAR(255)";
 	}
+
 	@Override
 	public String getXsdType() throws MolgenisModelException
 	{
@@ -69,13 +70,14 @@ public class EmailField extends FieldType
 	{
 		return "string";
 	}
-	
+
 	@Override
 	public String getCppJavaPropertyType()
 	{
 		return "Ljava/lang/String;";
 	}
 
+	@Override
 	public Class<?> getJavaType()
 	{
 		return String.class;
@@ -87,7 +89,7 @@ public class EmailField extends FieldType
 		return value;
 	}
 
-
+	@Override
 	public FieldTypeEnum getEnumType()
 	{
 		return FieldTypeEnum.EMAIL;

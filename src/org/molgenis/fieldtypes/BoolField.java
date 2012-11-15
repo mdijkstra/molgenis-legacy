@@ -13,14 +13,14 @@ public class BoolField extends FieldType
 	{
 		return "Boolean";
 	}
-	
+
 	@Override
 	public String getJavaAssignment(String value)
 	{
-		if(value == null || value.equals("")) return "null";
-		return ""+Boolean.parseBoolean(value.toString());
+		if (value == null || value.equals("")) return "null";
+		return "" + Boolean.parseBoolean(value.toString());
 	}
-	
+
 	@Override
 	public String getJavaPropertyDefault()
 	{
@@ -32,7 +32,7 @@ public class BoolField extends FieldType
 	{
 		return "BOOL";
 	}
-	
+
 	@Override
 	public String getOracleType() throws MolgenisModelException
 	{
@@ -44,7 +44,7 @@ public class BoolField extends FieldType
 	{
 		return "INTEGER";
 	}
-	
+
 	@Override
 	public String getXsdType()
 	{
@@ -75,15 +75,19 @@ public class BoolField extends FieldType
 		return "Ljava/lang/Boolean;";
 	}
 
+	@Override
 	public Class<?> getJavaType()
 	{
 		return Boolean.class;
 	}
-	
-	public Boolean getTypedValue(String value) {
+
+	@Override
+	public Boolean getTypedValue(String value)
+	{
 		return Boolean.parseBoolean(value);
 	}
 
+	@Override
 	public FieldTypeEnum getEnumType()
 	{
 		return FieldTypeEnum.BOOL;

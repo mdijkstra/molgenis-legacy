@@ -19,46 +19,53 @@ import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 /**
  * Implementation of a simple tree
  */
 @SuppressWarnings("unchecked")
-public class SimpleTree<T extends Tree> implements Tree<T>,Serializable
+public class SimpleTree<T extends Tree> implements Tree<T>, Serializable
 {
+	private final Logger logger = Logger.getLogger(getClass());
+
 	/** Unique name of this element */
 	protected String name;
-	/** Optional, the value of this element*/
+	/** Optional, the value of this element */
 	private Object value;
 	/** parent.name (or null if root element) */
 	protected String parentName;
 	/** map of tree elements (ordered) */
 	protected Map<String, T> treeElements;
 	/** Serializable id */
-	static final long serialVersionUID = 7443849689931440159L;	
-	
+	static final long serialVersionUID = 7443849689931440159L;
+
 	/**
 	 * Construct a new Tree
-	 * @param name unique name
-	 * @param parent the parent of this Tree. If null, then this is the root.
+	 * 
+	 * @param name
+	 *            unique name
+	 * @param parent
+	 *            the parent of this Tree. If null, then this is the root.
 	 */
 	public SimpleTree(String name, T parent)
 	{
-		//System.out.println("SimpleTree name:" + name + "parent"+ parent);
+		// System.out.println("SimpleTree name:" + name + "parent"+ parent);
 
-		//checks
+		// checks
 		if (StringUtils.isEmpty(name))
 		{
 			throw new IllegalArgumentException("name cannot be empty");
 		}
-		if (parent != null)
-			try
-			{
-				if(parent.get(name) != null)
-					throw new IllegalArgumentException("elements already exists with name = '" + name + "'");
-			} catch(NullPointerException e)
-			{
-			}
+		if (parent != null) try
+		{
+			if (parent.get(name) != null) throw new IllegalArgumentException("elements already exists with name = '"
+					+ name + "'");
+		}
+		catch (NullPointerException e)
+		{
+			logger.error("NullPointer in constructor op SimpleTree", e);
+		}
 
 		// body
 		this.name = name;
@@ -69,55 +76,60 @@ public class SimpleTree<T extends Tree> implements Tree<T>,Serializable
 		}
 		else
 		{
-			treeElements = parent.getTreeElements(); //get a pointer to tree elements.
+			treeElements = parent.getTreeElements(); // get a pointer to tree
+														// elements.
 			parentName = parent.getName();
 		}
-		treeElements.put(name, (T)this);
+		treeElements.put(name, (T) this);
 	}
 
+	@Override
 	public final String getName()
 	{
 		return this.name;
 	}
-	
+
 	public void setName(String name)
 	{
-		//System.out.println("name " + name );
+		// System.out.println("name " + name );
 
 		if (StringUtils.isEmpty(name))
 		{
 			throw new IllegalArgumentException("name cannot be empty");
-		}		
+		}
 		treeElements.remove(getName());
 		this.name = name;
-		treeElements.put(name,(T)this);
+		treeElements.put(name, (T) this);
 	}
-	
+
 	public void setName(String name, String url)
 	{
 		setName(name);
-		
+
 	}
 
+	@Override
 	public T get(String name)
 	{
 		return treeElements.get(name);
 	}
 
+	@Override
 	public final T getParent()
 	{
-		if (parentName != null)
-			return treeElements.get(parentName);
+		if (parentName != null) return treeElements.get(parentName);
 		else
 			return null;
 	}
 
+	@Override
 	public void setParent(T parent)
 	{
 		// does the parent already contain an element with my name
 		if (parent != null && parent.get(name) != null)
 		{
-			throw new IllegalArgumentException(this.toString() + ".setParent(" + parent.toString() + ") failed: a element already exists with name = '" + name + "', being " + parent.get(name));
+			throw new IllegalArgumentException(this.toString() + ".setParent(" + parent.toString()
+					+ ") failed: a element already exists with name = '" + name + "', being " + parent.get(name));
 		}
 
 		// oh, and if there are any keys that are in both maps that map to
@@ -128,7 +140,8 @@ public class SimpleTree<T extends Tree> implements Tree<T>,Serializable
 			{
 				if (pkey.equals(ckey) && !parent.getTreeElements().get(pkey).equals(this.treeElements.get(ckey)))
 				{
-					throw new IllegalArgumentException("setParent(" + parent.getName() + "): duplicate child '" + ckey + "'/'" + pkey + "'");
+					throw new IllegalArgumentException("setParent(" + parent.getName() + "): duplicate child '" + ckey
+							+ "'/'" + pkey + "'");
 				}
 			}
 		}
@@ -145,6 +158,7 @@ public class SimpleTree<T extends Tree> implements Tree<T>,Serializable
 		parentName = parent.getName();
 	}
 
+	@Override
 	public T getRoot()
 	{
 		if (parentName == null)
@@ -156,18 +170,20 @@ public class SimpleTree<T extends Tree> implements Tree<T>,Serializable
 			return (T) getParent().getRoot();
 		}
 	}
-	
+
+	@Override
 	public final List<T> getAllChildren()
 	{
 		return this.getAllChildren(false);
 	}
-	
-	/** sort in order of dependency*/
+
+	/** sort in order of dependency */
+	@Override
 	public final List<T> getAllChildren(boolean includeSelf)
 	{
 		ArrayList<T> all_children = new ArrayList<T>();
-		if(includeSelf) all_children.add((T)this);
-		for(T child: getChildren())
+		if (includeSelf) all_children.add((T) this);
+		for (T child : getChildren())
 		{
 			all_children.add(child);
 			all_children.addAll(child.getAllChildren());
@@ -175,6 +191,7 @@ public class SimpleTree<T extends Tree> implements Tree<T>,Serializable
 		return all_children;
 	}
 
+	@Override
 	public Vector<T> getChildren()
 	{
 		Vector<T> children = new Vector<T>();
@@ -188,11 +205,12 @@ public class SimpleTree<T extends Tree> implements Tree<T>,Serializable
 		return children;
 	}
 
+	@Override
 	public T getChild(String name)
 	{
 		T child = treeElements.get(name);
 
-		if (child != null && child.getParent().equals(this))
+		if ((child != null) && (child.getParent() != null) && child.getParent().equals(this))
 		{
 			return child;
 		}
@@ -207,9 +225,10 @@ public class SimpleTree<T extends Tree> implements Tree<T>,Serializable
 		return toString(includeSubTree, 0);
 	}
 
+	@Override
 	public String toString(boolean includeSubTree, int level)
 	{
-		String str = toString();
+		StringBuilder strBuilder = new StringBuilder(toString());
 
 		if (includeSubTree && getChildren().size() > 0)
 		{
@@ -218,70 +237,74 @@ public class SimpleTree<T extends Tree> implements Tree<T>,Serializable
 			{
 				indent += "    ";
 			}
-			for (Tree element: getChildren())
+			for (Tree element : getChildren())
 			{
-				str += "\n" + indent + element.toString(true, level + 1) + ",";
+				strBuilder.append('\n').append(indent).append(element.toString(true, level + 1)).append(',');
 			}
-
-			str = str.substring(0, str.length() - 1);
+			strBuilder.deleteCharAt(strBuilder.length() - 1);
 		}
 
-		return str;
+		return strBuilder.toString();
 	}
-	
-	public Object getValue() {
+
+	@Override
+	public Object getValue()
+	{
 		return value;
 	}
 
-	public void setValue(Object value) {
+	@Override
+	public void setValue(Object value)
+	{
 		this.value = value;
 	}
 
-	public Map<String,T> getTreeElements()
+	@Override
+	public Map<String, T> getTreeElements()
 	{
 		return this.treeElements;
-	}	
-	
+	}
+
+	@Override
 	public String toString()
 	{
 		return getClass().getSimpleName() + "(name='" + getName() + "')";
 	}
-	
+
+	@Override
 	public boolean hasChildren()
 	{
-		if (this.getChildren().isEmpty())
-			return false;
+		if (this.getChildren().isEmpty()) return false;
 		return true;
 	}
-	
+
+	@Override
 	public boolean hasParent()
 	{
-		if (this.getParent() == null)
-			return false;
+		if (this.getParent() == null) return false;
 		return true;
 	}
-	
+
 	public String getStringValue()
 	{
-		if (value == null)
-			return "";
-		return value.toString();		
+		if (value == null) return "";
+		return value.toString();
 	}
-	
+
+	@Override
 	public String getPath(String separator)
 	{
-		if(this.getParent() != null)
-			return this.getParent().getPath(separator)+separator+this.getName();
+		if (this.getParent() != null) return this.getParent().getPath(separator) + separator + this.getName();
 		return this.getName();
 	}
-	
+
 	public void remove()
 	{
-		for(T t: this.getAllChildren())
+		for (T t : this.getAllChildren())
 		{
 			this.treeElements.remove(t.getName());
 		}
 		this.treeElements.remove(this.getName());
 	}
-	
+
 }

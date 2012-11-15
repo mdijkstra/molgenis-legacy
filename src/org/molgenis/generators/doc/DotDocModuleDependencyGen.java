@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -22,10 +23,10 @@ import freemarker.template.TemplateException;
 
 public class DotDocModuleDependencyGen extends Generator
 {
-	public static final transient Logger logger = Logger.getLogger(DotDocModuleDependencyGen.class);
+	private static final Logger logger = Logger.getLogger(DotDocModuleDependencyGen.class);
 
 	// need to add input and output file
-	public static String GRAPHVIZ_COMMAND_WINDOWS = "dot";
+	public static final String GRAPHVIZ_COMMAND_WINDOWS = "dot";
 
 	@Override
 	public String getDescription()
@@ -45,7 +46,11 @@ public class DotDocModuleDependencyGen extends Generator
 		Map<String, Object> templateArgs = createTemplateArguments(options);
 
 		File target = new File(this.getDocumentationPath(options) + "/module-dependency-diagram.dot");
-		target.getParentFile().mkdirs();
+		boolean created = target.getParentFile().mkdirs();
+		if (!created && !target.getParentFile().exists())
+		{
+			throw new IOException("could not create " + target.getParentFile());
+		}
 
 		// count the relationships
 		Map<String, Integer> mapOfRelations = new LinkedHashMap<String, Integer>();
@@ -106,7 +111,7 @@ public class DotDocModuleDependencyGen extends Generator
 	{
 
 		OutputStream targetOut = new FileOutputStream(target);
-		template.process(templateArgs, new OutputStreamWriter(targetOut));
+		template.process(templateArgs, new OutputStreamWriter(targetOut, Charset.forName("UTF-8")));
 		targetOut.close();
 	}
 
@@ -185,7 +190,13 @@ public class DotDocModuleDependencyGen extends Generator
 			logger.debug("Data model image was generated succesfully.\nOutput:\n" + result);
 
 		}
-		catch (Exception e)
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			logger.error("Generation of graphical documentation failed: return code " + e.getMessage()
+					+ ". Install GraphViz and put dot.exe on your path.");
+		}
+		catch (InterruptedException e)
 		{
 			e.printStackTrace();
 			logger.error("Generation of graphical documentation failed: return code " + e.getMessage()

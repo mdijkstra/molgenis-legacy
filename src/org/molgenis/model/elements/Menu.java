@@ -12,7 +12,6 @@ package org.molgenis.model.elements;
 
 import org.molgenis.model.MolgenisModelException;
 
-
 // jdk
 
 /**
@@ -34,20 +33,22 @@ public class Menu extends UISchema
 			this.tag = tag;
 		}
 
+		@Override
 		public String toString()
 		{
 			return this.tag;
 		}
-		
+
 		public static Position getPosition(String position) throws MolgenisModelException
 		{
-			String options = "";
-			for(Position p: Position.values())
+			StringBuilder optionsBuilder = new StringBuilder();
+			for (Position p : Position.values())
 			{
-				if(p.toString().equalsIgnoreCase(position)) return p;
-				options += p.toString() +", ";
+				if (p.toString().equalsIgnoreCase(position)) return p;
+				optionsBuilder.append(p.toString()).append(", ");
 			}
-			throw new MolgenisModelException("position='"+position+"' is UNKNOWN for menu. Valid options: "+options);
+			throw new MolgenisModelException("position='" + position + "' is UNKNOWN for menu. Valid options: "
+					+ optionsBuilder.toString());
 		}
 	};
 
@@ -59,15 +60,15 @@ public class Menu extends UISchema
 	{
 		super(name, parent);
 	}
-	
+
 	public Position getPosition()
 	{
-		//default position is LEFT or the same as the menu above
-		if(position == null)
+		// default position is LEFT or the same as the menu above
+		if (position == null)
 		{
-			if(this.getParent() instanceof Menu)
+			if (this.getParent() instanceof Menu)
 			{
-				return ((Menu)getParent()).getPosition();
+				return ((Menu) getParent()).getPosition();
 			}
 			else
 			{
@@ -81,9 +82,10 @@ public class Menu extends UISchema
 	{
 		this.position = position;
 	}
-	
+
+	@Override
 	public String toString()
-	{	
+	{
 		return String.format("Menu(name=%s, group=%s)", getName(), getGroup());
 	}
 
@@ -91,6 +93,7 @@ public class Menu extends UISchema
 	/**
 	 * 
 	 */
+	@Override
 	public Type getType()
 	{
 		return Type.MENU;
@@ -99,6 +102,6 @@ public class Menu extends UISchema
 	// local variables
 	/** Used for serialization purposes. */
 	static final long serialVersionUID = -1842653490799425686L;
-	
+
 	private Position position = null;
 }

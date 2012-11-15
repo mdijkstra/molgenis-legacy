@@ -16,14 +16,14 @@ public class FileField extends FieldType
 	{
 		return "String";
 	}
-	
+
 	@Override
 	public String getJavaAssignment(String value)
 	{
-		if(value == null || value.equals("")) return "null";
-		return "\""+value+"\"";
+		if (value == null || value.equals("")) return "null";
+		return "\"" + value + "\"";
 	}
-	
+
 	@Override
 	public String getJavaPropertyDefault()
 	{
@@ -35,7 +35,7 @@ public class FileField extends FieldType
 	{
 		return "VARCHAR(1024)";
 	}
-	
+
 	@Override
 	public String getOracleType() throws MolgenisModelException
 	{
@@ -47,6 +47,7 @@ public class FileField extends FieldType
 	{
 		return "VARCHAR(1024)";
 	}
+
 	@Override
 	public String getXsdType()
 	{
@@ -70,28 +71,34 @@ public class FileField extends FieldType
 	{
 		return "string";
 	}
-	
+
 	@Override
 	public String getCppJavaPropertyType()
 	{
 		return "Ljava/lang/String;";
 	}
 
+	@Override
 	public Class<?> getJavaType()
 	{
 		return File.class;
 	}
 
+	@Override
 	public File getTypedValue(String value) throws ParseException
 	{
 		File file = new File(value);
-		if (file.exists()) {
+		if (file.exists())
+		{
 			return file;
-		} else {
+		}
+		else
+		{
 			throw new ParseException("File " + value + " not found.", 0);
 		}
 	}
-	
+
+	@Override
 	public FieldTypeEnum getEnumType()
 	{
 		return FieldTypeEnum.FILE;

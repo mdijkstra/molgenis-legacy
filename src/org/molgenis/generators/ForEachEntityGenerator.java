@@ -2,8 +2,10 @@ package org.molgenis.generators;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -54,49 +56,42 @@ public abstract class ForEachEntityGenerator extends Generator
 		{
 			// calculate package from its own package
 			String packageName = entity.getNamespace().toLowerCase()
-					+ this.getClass().getPackage().toString().substring(
-							Generator.class.getPackage().toString().length());
+					+ this.getClass().getPackage().toString()
+							.substring(Generator.class.getPackage().toString().length());
 			File targetDir = new File(this.getSourcePath(options) + packageName.replace(".", "/"));
-			if (handwritten)
-				targetDir = new File(this.getHandWrittenPath(options) + packageName.replace(".", "/"));
+			if (handwritten) targetDir = new File(this.getHandWrittenPath(options) + packageName.replace(".", "/"));
 
-			try
+			if ((!entity.isAbstract() || this.includeAbstract) && (!this.skipSystem() || !entity.isSystem()))
 			{
-				if ((!entity.isAbstract() || this.includeAbstract) && (!this.skipSystem() || !entity.isSystem()))
+				File targetFile = new File(targetDir + "/" + GeneratorHelper.getJavaName(entity.getName()) + getType()
+						+ getExtension());
+				if (!handwritten || !targetFile.exists())
 				{
-					File targetFile = new File(targetDir + "/" + GeneratorHelper.getJavaName(entity.getName())
-							+ getType() + getExtension());
-					if (!handwritten || !targetFile.exists())
+					boolean created = targetDir.mkdirs();
+					if (!created && !targetDir.exists())
 					{
-						targetDir.mkdirs();
-						
-						// logger.debug("trying to generated "+targetFile);
-						templateArgs.put("entity", entity);
-						templateArgs.put("model", model);
-						templateArgs.put("db_driver", options.db_driver);
-						templateArgs.put("template", template.getName());
-						templateArgs.put("file", targetDir + "/" + GeneratorHelper.getJavaName(entity.getName())
-								+ getType() + getExtension());
-						templateArgs.put("package", packageName);
-						
-						templateArgs.put("databaseImp", options.mapper_implementation);
-						templateArgs.put("jpa_use_sequence", options.jpa_use_sequence);
-
-						OutputStream targetOut = new FileOutputStream(targetFile);
-
-						template.process(templateArgs, new OutputStreamWriter(targetOut));
-						targetOut.close();
-
-						// logger.info("generated " +
-						// targetFile.getAbsolutePath());
-						logger.info("generated " + targetFile);
+						throw new IOException("could not create " + targetDir);
 					}
+
+					// logger.debug("trying to generated "+targetFile);
+					templateArgs.put("entity", entity);
+					templateArgs.put("model", model);
+					templateArgs.put("db_driver", options.db_driver);
+					templateArgs.put("template", template.getName());
+					templateArgs.put("file", targetDir + "/" + GeneratorHelper.getJavaName(entity.getName())
+							+ getType() + getExtension());
+					templateArgs.put("package", packageName);
+
+					templateArgs.put("databaseImp", options.mapper_implementation);
+					templateArgs.put("jpa_use_sequence", options.jpa_use_sequence);
+
+					OutputStream targetOut = new FileOutputStream(targetFile);
+
+					template.process(templateArgs, new OutputStreamWriter(targetOut, Charset.forName("UTF-8")));
+					targetOut.close();
+
+					logger.info("generated " + targetFile);
 				}
-			}
-			catch (Exception e)
-			{
-				logger.error("problem generating for " + entity.getName());
-				throw e;
 			}
 		}
 	}

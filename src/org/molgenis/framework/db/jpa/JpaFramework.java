@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.molgenis.framework.db.jpa;
 
 import java.sql.Connection;
@@ -13,34 +9,35 @@ import javax.persistence.EntityManager;
 import org.molgenis.util.Entity;
 
 /**
- *
+ * 
  * @author joris lops
  */
-public interface JpaFramework {
-    
+public interface JpaFramework
+{
+
 	public <E extends Entity> List<E> findByExample(EntityManager em, E example);
-    
+
 	/**
 	 * Create tables based on annotations.
 	 * 
 	 * @param persistenceUnitName
 	 */
-    public void createTables(final String persistenceUnitName, final Map<String, Object> configOverwrites);
-    
+	public void createTables(final String persistenceUnitName, final Map<String, Object> configOverwrites);
+
 	/**
 	 * Update tables based on annotations.
 	 * 
 	 * @param persistenceUnitName
 	 */
-    public void updateTables(final String persistenceUnitName, final Map<String, Object> configOverwrites);
+	public void updateTables(final String persistenceUnitName, final Map<String, Object> configOverwrites);
 
-    /**
-     * Drop tables based on annotations
-     * 
-     * @param persistenceUnitName
-     */
-    public void dropTables(final String persistenceUnitName, final Map<String, Object> configOverwrites);  
-    
-    @Deprecated
-    public Connection getConnection(EntityManager em);
+	/**
+	 * Drop tables based on annotations
+	 * 
+	 * @param persistenceUnitName
+	 */
+	public void dropTables(final String persistenceUnitName, final Map<String, Object> configOverwrites);
+
+	@Deprecated
+	public Connection getConnection(EntityManager em);
 }

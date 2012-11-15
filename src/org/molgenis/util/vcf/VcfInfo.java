@@ -2,7 +2,6 @@ package org.molgenis.util.vcf;
 
 import org.molgenis.util.Tuple;
 
-
 /**
  * Info metadata atttached to VcfReader
  */
@@ -88,10 +87,10 @@ public class VcfInfo
 		this.description = description;
 	}
 
+	@Override
 	public String toString()
 	{
-		return String.format(
-				"VcfInfo(ID=%s,Number=%s,Type=%s,Description=\"%s\")", getId(),
-				getNumber(), getType(), getDescription());
+		return String.format("VcfInfo(ID=%s,Number=%s,Type=%s,Description=\"%s\")", getId(), getNumber(), getType(),
+				getDescription());
 	}
 }

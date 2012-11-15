@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.molgenis.framework.db.jdbc.AbstractJDBCMapper;
 import org.molgenis.util.Entity;
 import org.molgenis.util.Tuple;
 import org.molgenis.util.TupleReader;
@@ -23,8 +22,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 	public static final int BATCH_SIZE = 500;
 
 	/** log messages */
-	private static transient final Logger logger = Logger
-			.getLogger(AbstractJDBCMapper.class.getSimpleName());
+	private static final Logger logger = Logger.getLogger(AbstractMapper.class);
 
 	public AbstractMapper(Database database)
 	{
@@ -40,6 +38,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 	/**
 	 * helper method create a new instance of E
 	 */
+	@Override
 	public abstract E create();
 
 	/**
@@ -50,6 +49,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 	 *            of the list
 	 * @return list
 	 */
+	@Override
 	public abstract List<E> createList(int size);
 
 	/**
@@ -57,8 +57,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 	 * 
 	 * @throws IOException
 	 */
-	protected abstract void prepareFileAttachements(List<E> entities, File dir)
-			throws IOException;
+	protected abstract void prepareFileAttachements(List<E> entities, File dir) throws IOException;
 
 	/**
 	 * helper method to do some actions after the transaction. For example:
@@ -68,8 +67,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 	 *         database)
 	 * @throws IOException
 	 */
-	protected abstract boolean saveFileAttachements(List<E> entities, File dir)
-			throws IOException;
+	protected abstract boolean saveFileAttachements(List<E> entities, File dir) throws IOException;
 
 	/**
 	 * translate into sql
@@ -77,8 +75,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 	 * @throws DatabaseException
 	 */
 	@Override
-	public abstract int executeAdd(List<? extends E> entities)
-			throws DatabaseException;
+	public abstract int executeAdd(List<? extends E> entities) throws DatabaseException;
 
 	/**
 	 * translate into sql
@@ -86,15 +83,13 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 	 * @throws DatabaseException
 	 */
 	@Override
-	public abstract int executeUpdate(List<? extends E> entities)
-			throws DatabaseException;
+	public abstract int executeUpdate(List<? extends E> entities) throws DatabaseException;
 
 	/**
 	 * translate into sql
 	 */
 	@Override
-	public abstract int executeRemove(List<? extends E> entities)
-			throws DatabaseException;
+	public abstract int executeRemove(List<? extends E> entities) throws DatabaseException;
 
 	/**
 	 * Foreign key values may be only given via the 'label'. This function
@@ -104,8 +99,8 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 	 * @throws DatabaseException
 	 * @throws ParseException
 	 */
-	public abstract void resolveForeignKeys(List<E> entities)
-			throws DatabaseException, ParseException;
+	@Override
+	public abstract void resolveForeignKeys(List<E> entities) throws DatabaseException, ParseException;
 
 	/**
 	 * Helper method for storing multiplicative references. This function should
@@ -118,8 +113,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 	 * @throws IOException
 	 * @throws ParseException
 	 */
-	public abstract void storeMrefs(List<E> entities) throws DatabaseException,
-			IOException, ParseException;
+	public abstract void storeMrefs(List<E> entities) throws DatabaseException, IOException, ParseException;
 
 	/**
 	 * Helper method for removing multiplicative references ('mrefs')
@@ -130,12 +124,11 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 	 * @throws DatabaseException
 	 * @throws ParseException
 	 */
-	public abstract void removeMrefs(List<E> entities) throws SQLException,
-			IOException, DatabaseException, ParseException;
+	public abstract void removeMrefs(List<E> entities) throws SQLException, IOException, DatabaseException,
+			ParseException;
 
 	@Override
-	public void find(TupleWriter writer, QueryRule... rules)
-			throws DatabaseException
+	public void find(TupleWriter writer, QueryRule... rules) throws DatabaseException
 	{
 		this.find(writer, null, rules);
 	}
@@ -147,6 +140,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 		return add(entities);
 	}
 
+	@Override
 	public int add(List<E> entities) throws DatabaseException
 	{
 		// count rows updated
@@ -160,8 +154,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 			if (privateTx) getDatabase().beginTx();
 
 			// prepare all file attachments
-			this.prepareFileAttachements(entities, getDatabase()
-					.getFilesource());
+			this.prepareFileAttachements(entities, getDatabase().getFilesource());
 
 			// insert this class in batches
 			for (int i = 0; i < entities.size(); i += BATCH_SIZE)
@@ -178,8 +171,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 			this.storeMrefs(entities);
 
 			// store file attachments and then update the file paths to them
-			if (this.saveFileAttachements(entities, getDatabase()
-					.getFilesource()))
+			if (this.saveFileAttachements(entities, getDatabase().getFilesource()))
 			{
 				this.update(entities);
 			}
@@ -187,25 +179,20 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 			// commit all batches
 			if (privateTx) getDatabase().commitTx();
 
-			logger.info(updatedRows + " "
-					+ this.create().getClass().getSimpleName()
-					+ " objects added");
+			logger.info(updatedRows + " " + this.create().getClass().getSimpleName() + " objects added");
 			return updatedRows;
 		}
 		catch (Exception sqle)
 		{
 			sqle.printStackTrace();
 			if (privateTx) getDatabase().rollbackTx();
-			logger.error("ADD failed on "
-					+ this.create().getClass().getSimpleName() + ": "
-					+ sqle.getMessage());
+			logger.error("ADD failed on " + this.create().getClass().getSimpleName() + ": " + sqle.getMessage());
 			throw new DatabaseException(sqle);
 		}
 	}
 
 	@Override
-	public int add(TupleReader reader, TupleWriter writer)
-			throws DatabaseException
+	public int add(TupleReader reader, TupleWriter writer) throws DatabaseException
 	{
 		// count affected rows
 		int rowsAffected = 0;
@@ -247,9 +234,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 		catch (Exception e)
 		{
 			if (privateTx) getDatabase().rollbackTx();
-			throw new DatabaseException("add("
-					+ create().getClass().getSimpleName() + ") failed: "
-					+ e.getMessage(), e);
+			throw new DatabaseException("add(" + create().getClass().getSimpleName() + ") failed: " + e.getMessage(), e);
 		}
 		return rowsAffected;
 	}
@@ -276,8 +261,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 			if (privateTx) getDatabase().beginTx();
 
 			// prepare file attachments
-			this.prepareFileAttachements(entities, getDatabase()
-					.getFilesource());
+			this.prepareFileAttachements(entities, getDatabase().getFilesource());
 
 			// update in batches
 			for (int i = 0; i < entities.size(); i += BATCH_SIZE)
@@ -286,8 +270,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 				List<E> sublist = entities.subList(i, endindex);
 
 				// put the files in their place
-				this.saveFileAttachements(sublist, getDatabase()
-						.getFilesource());
+				this.saveFileAttachements(sublist, getDatabase().getFilesource());
 
 				// attempt to resolve foreign keys by label (ie. 'name')
 				this.resolveForeignKeys(sublist);
@@ -299,17 +282,14 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 
 			if (privateTx) getDatabase().commitTx();
 
-			logger.info(updatedRows + " "
-					+ this.create().getClass().getSimpleName()
-					+ " objects updated");
+			logger.info(updatedRows + " " + this.create().getClass().getSimpleName() + " objects updated");
 			return updatedRows;
 		}
 		catch (Exception sqle)
 		{
 			if (privateTx) getDatabase().rollbackTx();
 
-			throw new DatabaseException("Update("
-					+ create().getClass().getSimpleName() + ") failed: "
+			throw new DatabaseException("Update(" + create().getClass().getSimpleName() + ") failed: "
 					+ sqle.getMessage(), sqle);
 		}
 	}
@@ -343,9 +323,8 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 		catch (Exception e)
 		{
 			if (privateTx) getDatabase().rollbackTx();
-			throw new DatabaseException("update("
-					+ create().getClass().getSimpleName() + ") failed: "
-					+ e.getMessage(), e);
+			throw new DatabaseException(
+					"update(" + create().getClass().getSimpleName() + ") failed: " + e.getMessage(), e);
 		}
 		return rowsAffected;
 	}
@@ -368,8 +347,7 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 			if (privateTx) getDatabase().beginTx();
 
 			// prepare file attachments
-			this.prepareFileAttachements(entities, getDatabase()
-					.getFilesource());
+			this.prepareFileAttachements(entities, getDatabase().getFilesource());
 
 			// remove in batches
 			for (int i = 0; i < entities.size(); i += BATCH_SIZE)
@@ -388,21 +366,16 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 			getDatabase().flush();
 			if (privateTx) getDatabase().commitTx();
 
-			logger.info(updatedRows + " "
-					+ this.create().getClass().getSimpleName()
-					+ " objects removed");
+			logger.info(updatedRows + " " + this.create().getClass().getSimpleName() + " objects removed");
 			return updatedRows;
 		}
 		catch (Exception sqle)
 		{
 			if (privateTx) getDatabase().rollbackTx();
 
-			logger.error("remove failed on "
-					+ this.create().getClass().getSimpleName() + ": "
-					+ sqle.getMessage());
+			logger.error("remove failed on " + this.create().getClass().getSimpleName() + ": " + sqle.getMessage());
 			sqle.printStackTrace();
-			throw new DatabaseException("remove("
-					+ create().getClass().getSimpleName() + ") failed: "
+			throw new DatabaseException("remove(" + create().getClass().getSimpleName() + ") failed: "
 					+ sqle.getMessage(), sqle);
 		}
 	}
@@ -432,28 +405,26 @@ public abstract class AbstractMapper<E extends Entity> implements Mapper<E>
 		catch (Exception e)
 		{
 			if (privateTx) getDatabase().rollbackTx();
-			throw new DatabaseException("remove("
-					+ create().getClass().getSimpleName() + ") failed: "
-					+ e.getMessage(), e);
+			throw new DatabaseException(
+					"remove(" + create().getClass().getSimpleName() + ") failed: " + e.getMessage(), e);
 		}
 		return rowsAffected;
 	}
 
 	@Override
-	//FIXME: limit argument is never used?
-	public List<E> toList(TupleReader reader, int limit)
-			throws DatabaseException
+	// FIXME: limit argument is never used?
+	public List<E> toList(TupleReader reader, int limit) throws DatabaseException
 	{
-		//hack to while over a reader until the result is empty
-		if(reader.isClosed())
+		// hack to while over a reader until the result is empty
+		if (reader.isClosed())
 		{
 			return new ArrayList<E>();
 		}
-		
-		final List<E> entities = createList(10); //TODO why 10?
+
+		final List<E> entities = createList(10); // TODO why 10?
 		try
 		{
-			for (Tuple line : reader) //TODO should limit not be used somehow?
+			for (Tuple line : reader) // TODO should limit not be used somehow?
 			{
 				E e = create();
 				e.set(line, false); // parse the tuple

@@ -2,7 +2,11 @@ package org.molgenis.util;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+
+import org.apache.commons.io.IOUtils;
 
 public class DirectoryCompare
 {
@@ -88,21 +92,24 @@ public class DirectoryCompare
 	public static boolean compareFileContent(File fileInDir1, File fileInDir2) throws Exception
 	{
 		boolean filesAreEqual = true;
-		BufferedReader input1 = new BufferedReader(new FileReader(fileInDir1));
-		BufferedReader input2 = new BufferedReader(new FileReader(fileInDir2));
+		;
+		BufferedReader input1 = new BufferedReader(new InputStreamReader(new FileInputStream(fileInDir1),
+				Charset.forName("UTF-8")));
+		BufferedReader input2 = new BufferedReader(new InputStreamReader(new FileInputStream(fileInDir2),
+				Charset.forName("UTF-8")));
 		try
 		{
 			String line1 = null;
 			String line2 = null;
-			
+
 			int input1_count = 0;
 			int input2_count = 0;
 
 			while ((line1 = input1.readLine()) != null)
-				//while ((line1 = input1.readLine()) != null && filesAreEqual)
+			// while ((line1 = input1.readLine()) != null && filesAreEqual)
 			{
 				while ((line2 = input2.readLine()) != null)
-					//while ((line2 = input2.readLine()) != null && filesAreEqual)
+				// while ((line2 = input2.readLine()) != null && filesAreEqual)
 				{
 					if (!line1.equals(line2))
 					{
@@ -118,15 +125,19 @@ public class DirectoryCompare
 				}
 				input1_count++;
 			}
-			
-			if(input1_count > input2_count){
+
+			if (input1_count > input2_count)
+			{
 				System.out.println("Difference in files detected:");
-				System.out.println("File 1 contains more lines ("+input1_count+") than file 2 ("+input2_count+"), files not equal");
+				System.out.println("File 1 contains more lines (" + input1_count + ") than file 2 (" + input2_count
+						+ "), files not equal");
 				filesAreEqual = false;
 			}
-			if(input2_count > input1_count){
+			if (input2_count > input1_count)
+			{
 				System.out.println("Difference in files detected:");
-				System.out.println("File 2 contains more lines ("+input2_count+")than file 1 ("+input1_count+"), files not equal");
+				System.out.println("File 2 contains more lines (" + input2_count + ")than file 1 (" + input1_count
+						+ "), files not equal");
 				filesAreEqual = false;
 			}
 		}
@@ -137,8 +148,8 @@ public class DirectoryCompare
 		}
 		finally
 		{
-			input1.close();
-			input2.close();
+			IOUtils.closeQuietly(input1);
+			IOUtils.closeQuietly(input2);
 		}
 
 		return filesAreEqual;

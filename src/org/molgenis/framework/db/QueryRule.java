@@ -31,7 +31,7 @@ import org.apache.commons.lang.StringUtils;
  * @author Richard Scheltema
  * @author Morris Swertz
  */
-public class QueryRule implements Cloneable
+public class QueryRule
 {
 	/** The operator being applied to the field and value */
 	protected Operator operator;
@@ -41,9 +41,6 @@ public class QueryRule implements Cloneable
 
 	/** The value to compare entries of the field in the database with */
 	protected Object value = null;
-
-	/** Indicate wheter this should evaluate to OR */
-	private boolean or = false; // default AND
 
 	/** Place to store nested rules */
 	// FIXME: why not put this in value?
@@ -59,7 +56,6 @@ public class QueryRule implements Cloneable
 		operator = copy.operator;
 		field = copy.field;
 		value = copy.value;
-		or = copy.or;
 		if (copy.nestedRules != null)
 		{
 			nestedRules = new QueryRule[copy.nestedRules.length];
@@ -349,56 +345,66 @@ public class QueryRule implements Cloneable
 	}
 
 	@Override
-	public boolean equals(Object o)
-	{
-		if (o != null && o instanceof QueryRule)
-		{
-			final QueryRule r = (QueryRule) o;
-
-			if ((
-			// field
-			r.getField() != null && r.getField().equals(this.getField()) || r.getField() == this.getField())
-					// operator
-					&& (r.getOperator() != null && r.getOperator().equals(this.getOperator()) || r.getOperator() == this
-							.getOperator())
-					// value
-					&& (r.getValue() != null && r.getValue().equals(this.getValue()) || r.getValue() == this.getValue())
-					// nested rules
-					&& (r.getNestedRules() != null && Arrays.equals(r.getNestedRules(), this.getNestedRules())))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
 	/**
 	 * 
 	 */
 	public String toString()
 	{
-		String result = "";
+		StringBuilder strBuilder = new StringBuilder();
 		if (this.getOperator().equals(Operator.NESTED))
 		{
-			result += "(";
+			strBuilder.append('(');
 
 			for (final QueryRule rule : this.getNestedRules())
 			{
-				result += rule.toString();
+				strBuilder.append(rule.toString());
 			}
-			result += ")";
+			strBuilder.append(')');
 		}
 		else
 		{
-			result = (this.getField() == null ? "" : (this.getField() + " ")) + this.getOperator()
-					+ (value == null ? "" : " '" + value + "'");
+			strBuilder.append(this.getField() == null ? " " : (this.getField() + " "));
+			strBuilder.append(this.getOperator()).append(value == null ? " " : " '" + value + "'");
 		}
-		return result;
+		return strBuilder.toString();
 	}
 
 	public static QueryRule eq(String name, Object value)
 	{
 		return new QueryRule(name, Operator.EQUALS, value);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((field == null) ? 0 : field.hashCode());
+		result = prime * result + Arrays.hashCode(nestedRules);
+		result = prime * result + ((operator == null) ? 0 : operator.hashCode());
+		result = prime * result + ((value == null) ? 0 : value.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		QueryRule other = (QueryRule) obj;
+		if (field == null)
+		{
+			if (other.field != null) return false;
+		}
+		else if (!field.equals(other.field)) return false;
+		if (!Arrays.equals(nestedRules, other.nestedRules)) return false;
+		if (operator != other.operator) return false;
+		if (value == null)
+		{
+			if (other.value != null) return false;
+		}
+		else if (!value.equals(other.value)) return false;
+		return true;
 	}
 }

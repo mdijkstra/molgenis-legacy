@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 import org.molgenis.framework.ui.html.WidgetFactory;
@@ -39,7 +40,7 @@ public class FreemarkerView extends SimpleScreenView<ScreenModel>
 	// wrapper of this template
 	private freemarker.template.Configuration conf = null;
 	private String templatePath;
-	private transient Logger logger = Logger.getLogger(FreemarkerView.class);
+	private static final Logger logger = Logger.getLogger(FreemarkerView.class);
 	private Map<String, Object> arguments = new LinkedHashMap<String, Object>();
 
 	public FreemarkerView(String templatePath, ScreenModel model)
@@ -100,14 +101,15 @@ public class FreemarkerView extends SimpleScreenView<ScreenModel>
 				//file
 				loaders.add(new FileTemplateLoader());
 
-				for (Object key : templateArgs.keySet())
+				for (Entry<String, Object> entry : templateArgs.entrySet())
 				{
-					if ("model".equals(key) && templateArgs.get(key) != null)
+					Object value = entry.getValue();
+					if (entry.getKey() != null && entry.getKey().equals("model") && value != null)
 					{
-						loaders.add(new ClassTemplateLoader(templateArgs.get(key).getClass()));
+						loaders.add(new ClassTemplateLoader(value.getClass()));
 
 						// also add superclass because of generated code
-						loaders.add(new ClassTemplateLoader(templateArgs.get(key).getClass().getSuperclass()));
+						loaders.add(new ClassTemplateLoader(value.getClass().getSuperclass()));
 					}
 				}
 				loaders.add(new FileTemplateLoader());
@@ -117,8 +119,8 @@ public class FreemarkerView extends SimpleScreenView<ScreenModel>
 				// Object.class, "");
 				// ClassTemplateLoader loader2 = new ClassTemplateLoader(
 				// getClass().getSuperclass(), "");
-				MultiTemplateLoader mLoader = new MultiTemplateLoader(loaders.toArray(new TemplateLoader[loaders
-						.size()]));
+				MultiTemplateLoader mLoader = new MultiTemplateLoader(
+						loaders.toArray(new TemplateLoader[loaders.size()]));
 				conf.setTemplateLoader(mLoader);
 				logger.debug("created freemarker config");
 			}

@@ -83,10 +83,10 @@ public class VcfFormat
 		this.description = description;
 	}
 
+	@Override
 	public String toString()
 	{
-		return String.format(
-				"VcfFormat(ID=%s,Number=%s,Type=%s,Description=\"%s\")", getId(),
-				getNumber(), getType(), getDescription());
+		return String.format("VcfFormat(ID=%s,Number=%s,Type=%s,Description=\"%s\")", getId(), getNumber(), getType(),
+				getDescription());
 	}
 }
