@@ -314,11 +314,11 @@ public class Ssh
 		{
 			String dir = remoteFile.substring(0, remoteFile.lastIndexOf("/"));
 			String file = remoteFile.substring(remoteFile.lastIndexOf("/") + 1);
-			scp.put(string.getBytes(), file, dir, "0600");
+			scp.put(string.getBytes("UTF-8"), file, dir, "0600");
 		}
 		else
 		{
-			scp.put(string.getBytes(), remoteFile, "", "0600");
+			scp.put(string.getBytes("UTF-8"), remoteFile, "", "0600");
 		}
 		logger.debug("upload file complete");
 

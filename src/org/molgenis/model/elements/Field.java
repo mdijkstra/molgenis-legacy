@@ -20,7 +20,6 @@ import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
-import org.apache.log4j.Logger;
 import org.molgenis.fieldtypes.CharField;
 import org.molgenis.fieldtypes.EnumField;
 import org.molgenis.fieldtypes.FieldType;
@@ -42,50 +41,10 @@ import org.molgenis.util.Tree;
  */
 public class Field implements Serializable
 {
-
-	public final static String TYPE_FIELD = "__Type";
-	public final transient Logger logger = Logger.getLogger(Field.class);
-
-	/**
-     * 
-     */
-	public class XRefLabel
-	{
-
-		/**
-         */
-		public Vector<String> getFields()
-		{
-			return fields;
-		}
-
-		/**
-         */
-		public String getFormat()
-		{
-			return format;
-		}
-
-		/**
-         */
-		@Override
-		public String toString()
-		{
-			return "XRefLabel: " + String.format(format, fields.toArray());
-		}
-
-		/** */
-		public Vector<String> fields = new Vector<String>();
-		/** */
-		public String format;
-	};
-
+	public static final String TYPE_FIELD = "__Type";
 	/** Fixed value used for determining the not-set value for the varchar. */
-	public static final int LENGTH_NOT_SET = 0;
+	private static final int LENGTH_NOT_SET = 0;
 
-	/**
-	 * Empty constructor
-	 */
 	public Field(Entity parent, String name, FieldType type)
 	{
 		this(parent, type, name, name, false, false, false, null, null);
@@ -652,7 +611,7 @@ public class Field implements Serializable
 		List<String> label_names = new ArrayList<String>();
 		for (String label : this.getXrefLabelsTemp())
 		{
-			label_names.add(label.replace(".", "_").replace(this.getXrefEntityName() + "_", ""));
+			label_names.add(label.replace(this.getXrefEntityName() + ".", ""));
 		}
 		return label_names;
 	}
