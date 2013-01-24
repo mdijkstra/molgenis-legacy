@@ -1,12 +1,17 @@
 package org.molgenis.io.csv;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,13 +29,17 @@ import org.molgenis.util.tuple.ValueTuple;
  */
 public class CsvReader implements TupleReader
 {
-	private static final char DEFAULT_SEPARATOR = ',';
+	private static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
+
+	public static final char DEFAULT_SEPARATOR = ',';
 
 	private final au.com.bytecode.opencsv.CSVReader csvReader;
 	private final boolean hasHeader;
 
 	/** process cells after reading */
 	private List<CellProcessor> cellProcessors;
+	/** column names index */
+	private Map<String, Integer> colNamesMap;
 
 	public CsvReader(Reader reader)
 	{
@@ -49,10 +58,34 @@ public class CsvReader implements TupleReader
 		this.hasHeader = hasHeader;
 	}
 
+	public CsvReader(File file) throws FileNotFoundException
+	{
+		this(new InputStreamReader(new FileInputStream(file), CHARSET_UTF8));
+	}
+
+	public CsvReader(File file, char separator) throws FileNotFoundException
+	{
+		this(new InputStreamReader(new FileInputStream(file), CHARSET_UTF8), separator);
+	}
+
+	public CsvReader(File file, char separator, boolean hasHeader) throws FileNotFoundException
+	{
+		this(new InputStreamReader(new FileInputStream(file), CHARSET_UTF8), separator, hasHeader);
+	}
+
 	@Override
 	public boolean hasColNames()
 	{
 		return hasHeader;
+	}
+
+	@Override
+	public Iterator<String> colNamesIterator() throws IOException
+	{
+		if (!hasHeader) return null;
+
+		if (colNamesMap == null) colNamesMap = toColNamesMap(csvReader.readNext());
+		return colNamesMap != null ? colNamesMap.keySet().iterator() : null;
 	}
 
 	@Override
@@ -93,8 +126,13 @@ public class CsvReader implements TupleReader
 							if (values != null)
 							{
 								for (int i = 0; i < values.length; ++i)
-									values[i] = processCell(values[i], false);
-								if (colNamesMap != null) next = new ValueIndexTuple(Arrays.asList(values), colNamesMap);
+								{
+									// subsequent separators indicate null
+									// values instead of empty strings
+									String value = values[i].isEmpty() ? null : values[i];
+									values[i] = processCell(value, false);
+								}
+								if (colNamesMap != null) next = new ValueIndexTuple(colNamesMap, Arrays.asList(values));
 								else
 									next = new ValueTuple(Arrays.asList(values));
 							}
@@ -132,7 +170,7 @@ public class CsvReader implements TupleReader
 		if (headers.length == 0) return Collections.emptyMap();
 
 		int capacity = (int) (headers.length / 0.75) + 1;
-		Map<String, Integer> columnIdx = new HashMap<String, Integer>(capacity);
+		Map<String, Integer> columnIdx = new LinkedHashMap<String, Integer>(capacity);
 		for (int i = 0; i < headers.length; ++i)
 		{
 			String header = processCell(headers[i], true);
@@ -156,12 +194,6 @@ public class CsvReader implements TupleReader
 	@Override
 	public void close() throws IOException
 	{
-		try
-		{
-			csvReader.close();
-		}
-		catch (IOException e)
-		{
-		}
+		csvReader.close();
 	}
 }

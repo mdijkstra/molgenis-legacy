@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 
 import org.apache.log4j.Logger;
 
@@ -225,7 +226,7 @@ public class Ssh
 					int len = stdout.read(buffer);
 					if (len > 0) // this check is somewhat paranoid
 					{
-						stdOutBuffer.append(new String(buffer, 0, len));
+						stdOutBuffer.append(new String(buffer, 0, len, Charset.forName("UTF-8")));
 					}
 				}
 
@@ -233,7 +234,7 @@ public class Ssh
 				{
 					int len = stderr.read(buffer);
 					if (len > 0) // this check is somewhat paranoid
-					stdErrBuffer.append(new String(buffer, 0, len));
+					stdErrBuffer.append(new String(buffer, 0, len, Charset.forName("UTF-8")));
 				}
 			}
 
@@ -276,22 +277,26 @@ public class Ssh
 		SCPClient scp = conn.createSCPClient();
 
 		OutputStream out = new FileOutputStream(localFile);
-
-		// split remote file in directory
-		if (remoteFile.contains("/"))
+		try
 		{
-			String dir = remoteFile.substring(0, remoteFile.lastIndexOf("/"));
-			String file = remoteFile.substring(remoteFile.lastIndexOf("/") + 1);
-			scp.put(localFile.getAbsolutePath(), file, dir, "0600");
+			// split remote file in directory
+			if (remoteFile.contains("/"))
+			{
+				String dir = remoteFile.substring(0, remoteFile.lastIndexOf("/"));
+				String file = remoteFile.substring(remoteFile.lastIndexOf("/") + 1);
+				scp.put(localFile.getAbsolutePath(), file, dir, "0600");
+			}
+			else
+			{
+				scp.put(localFile.getAbsolutePath(), remoteFile, "", "0600");
+			}
+			out.flush();
 		}
-		else
+		finally
 		{
-			scp.put(localFile.getAbsolutePath(), remoteFile, "", "0600");
+
+			out.close();
 		}
-
-		out.flush();
-		out.close();
-
 		logger.debug("upload file complete");
 	}
 
@@ -361,11 +366,16 @@ public class Ssh
 		SCPClient scp = conn.createSCPClient();
 
 		OutputStream out = new FileOutputStream(localFile);
+		try
+		{
+			scp.get(remoteFile, out);
 
-		scp.get(remoteFile, out);
-
-		out.flush();
-		out.close();
+			out.flush();
+		}
+		finally
+		{
+			out.close();
+		}
 
 		logger.debug("download file complete");
 	}
@@ -375,15 +385,15 @@ public class Ssh
 		logger.debug("download remote file '" + remoteFile);
 		SCPClient scp = conn.createSCPClient();
 
-		OutputStream out = new ByteArrayOutputStream();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
 		scp.get(remoteFile, out);
 
-		return out.toString();
+		return out.toString("UTF-8");
 	}
 
 	@Override
-	public void finalize()
+	protected void finalize()
 	{
 		this.close();
 	}
@@ -442,7 +452,7 @@ public class Ssh
 
 		logger.debug("download file complete");
 
-		return out.toString();
+		return out.toString("UTF-8");
 	}
 
 }

@@ -24,7 +24,7 @@ public class CsvReaderTest
 	@Test(expectedExceptions = IllegalArgumentException.class)
 	public void CsvReader()
 	{
-		new CsvReader(null);
+		new CsvReader((Reader) null);
 	}
 
 	@Test
@@ -62,6 +62,24 @@ public class CsvReaderTest
 			}
 			verify(processor).process("val1");
 			verify(processor).process("val2");
+		}
+		finally
+		{
+			csvReader.close();
+		}
+	}
+
+	@Test
+	public void colNamesIterator() throws IOException
+	{
+		CsvReader csvReader = new CsvReader(new StringReader("col1,col2\nval1,val2"), ',', true);
+		try
+		{
+			Iterator<String> colNamesIt = csvReader.colNamesIterator();
+			assertTrue(colNamesIt.hasNext());
+			assertEquals(colNamesIt.next(), "col1");
+			assertTrue(colNamesIt.hasNext());
+			assertEquals(colNamesIt.next(), "col2");
 		}
 		finally
 		{
@@ -145,6 +163,24 @@ public class CsvReaderTest
 													// ruin the next field..
 			Tuple tuple6 = tuples.get(6);
 			assertEquals(4, tuple6.getNrCols());
+		}
+		finally
+		{
+			csvReader.close();
+		}
+	}
+
+	@Test
+	public void iterator_emptyValues() throws IOException
+	{
+		String csvString = "col1,col2,col3\n,,\n";
+		CsvReader csvReader = new CsvReader(new StringReader(csvString));
+		try
+		{
+			Iterator<Tuple> it = csvReader.iterator();
+			assertTrue(it.hasNext());
+			Tuple tuple = it.next();
+			assertTrue(tuple.isNull("col1"));
 		}
 		finally
 		{

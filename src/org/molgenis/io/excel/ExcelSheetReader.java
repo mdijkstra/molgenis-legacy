@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.molgenis.io.TupleReader;
 import org.molgenis.io.processor.AbstractCellProcessor;
@@ -24,6 +26,8 @@ public class ExcelSheetReader implements TupleReader
 
 	/** process cells after reading */
 	private List<CellProcessor> cellProcessors;
+	/** column names index */
+	private Map<String, Integer> colNamesMap;
 
 	ExcelSheetReader(org.apache.poi.ss.usermodel.Sheet sheet, boolean hasHeader, List<CellProcessor> cellProcessors)
 	{
@@ -47,6 +51,18 @@ public class ExcelSheetReader implements TupleReader
 	public boolean hasColNames()
 	{
 		return hasHeader;
+	}
+
+	@Override
+	public Iterator<String> colNamesIterator() throws IOException
+	{
+		if (!hasHeader) return null;
+
+		Iterator<Row> it = sheet.iterator();
+		if (!it.hasNext()) return null;
+
+		if (colNamesMap == null) colNamesMap = toColNamesMap(it.next());
+		return colNamesMap != null ? colNamesMap.keySet().iterator() : null;
 	}
 
 	@Override
@@ -114,6 +130,8 @@ public class ExcelSheetReader implements TupleReader
 		switch (cell.getCellType())
 		{
 			case Cell.CELL_TYPE_BLANK:
+				value = null;
+				break;
 			case Cell.CELL_TYPE_STRING:
 				value = cell.getStringCellValue();
 				break;
@@ -134,7 +152,33 @@ public class ExcelSheetReader implements TupleReader
 				value = String.valueOf(cell.getBooleanCellValue());
 				break;
 			case Cell.CELL_TYPE_FORMULA:
-				value = cell.getCellFormula();
+				// evaluate formula
+				FormulaEvaluator evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
+				CellValue cellValue = evaluator.evaluate(cell);
+				switch (cellValue.getCellType())
+				{
+					case Cell.CELL_TYPE_BOOLEAN:
+						value = String.valueOf(cellValue.getBooleanValue());
+						break;
+					case Cell.CELL_TYPE_NUMERIC:
+						// excel stores integer values as double values
+						// read an integer if the double value equals the
+						// integer value
+						double x = cellValue.getNumberValue();
+						if (x == Math.rint(x) && !Double.isNaN(x) && !Double.isInfinite(x)) value = String
+								.valueOf((int) x);
+						else
+							value = String.valueOf(x);
+						break;
+					case Cell.CELL_TYPE_STRING:
+						value = cellValue.getStringValue();
+						break;
+					case Cell.CELL_TYPE_BLANK:
+						value = null;
+						break;
+					default:
+						throw new RuntimeException("unsupported cell type: " + cellValue.getCellType());
+				}
 				break;
 			default:
 				throw new RuntimeException("unsupported cell type: " + cell.getCellType());
@@ -144,6 +188,8 @@ public class ExcelSheetReader implements TupleReader
 
 	private static class RowTuple extends AbstractTuple
 	{
+		private static final long serialVersionUID = 1L;
+
 		private final Row row;
 		private final List<CellProcessor> cellProcessors;
 
@@ -167,7 +213,7 @@ public class ExcelSheetReader implements TupleReader
 		}
 
 		@Override
-		public Iterator<String> getColNames()
+		public Iterable<String> getColNames()
 		{
 			throw new UnsupportedOperationException();
 		}
@@ -188,7 +234,9 @@ public class ExcelSheetReader implements TupleReader
 
 	private static class RowIndexTuple extends AbstractTuple
 	{
-		private final Row row;
+		private static final long serialVersionUID = 1L;
+
+		private final transient Row row;
 		private final Map<String, Integer> colNamesMap;
 		private final List<CellProcessor> cellProcessors;
 
@@ -204,7 +252,7 @@ public class ExcelSheetReader implements TupleReader
 		@Override
 		public int getNrCols()
 		{
-			return row.getLastCellNum();
+			return colNamesMap.size();
 		}
 
 		@Override
@@ -214,9 +262,9 @@ public class ExcelSheetReader implements TupleReader
 		}
 
 		@Override
-		public Iterator<String> getColNames()
+		public Iterable<String> getColNames()
 		{
-			return Collections.unmodifiableSet(colNamesMap.keySet()).iterator();
+			return Collections.unmodifiableSet(colNamesMap.keySet());
 		}
 
 		@Override

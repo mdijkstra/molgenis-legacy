@@ -34,6 +34,13 @@ public class ExcelSheetReaderTest
 		excelReader.close();
 	}
 
+	@SuppressWarnings("resource")
+	@Test(expectedExceptions = IllegalArgumentException.class)
+	public void ExcelSheetReader()
+	{
+		new ExcelSheetReader(null, true, null);
+	}
+
 	@Test
 	public void addCellProcessor_header()
 	{
@@ -60,6 +67,16 @@ public class ExcelSheetReaderTest
 	}
 
 	@Test
+	public void colNamesIterator() throws IOException
+	{
+		Iterator<String> colNamesIt = excelSheetReader.colNamesIterator();
+		assertTrue(colNamesIt.hasNext());
+		assertEquals(colNamesIt.next(), "col1");
+		assertTrue(colNamesIt.hasNext());
+		assertEquals(colNamesIt.next(), "col2");
+	}
+
+	@Test
 	public void getName()
 	{
 		assertEquals(excelSheetReader.getName(), "test");
@@ -68,7 +85,7 @@ public class ExcelSheetReaderTest
 	@Test
 	public void getNrRows()
 	{
-		assertEquals(excelSheetReader.getNrRows(), 4);
+		assertEquals(excelSheetReader.getNrRows(), 5);
 	}
 
 	@Test
@@ -96,6 +113,12 @@ public class ExcelSheetReaderTest
 		Tuple row3 = it.next();
 		assertEquals(row3.get("col1"), "XXX");
 		assertEquals(row3.get("col2"), "val6");
+		assertTrue(it.hasNext());
+
+		// test number cell (col1) and formula cell (col2)
+		Tuple row4 = it.next();
+		assertEquals(row4.get("col1"), "1.2");
+		assertEquals(row4.get("col2"), "2.4");
 		assertFalse(it.hasNext());
 	}
 }

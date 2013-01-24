@@ -1,6 +1,5 @@
 package org.molgenis.util.tuple;
 
-import java.util.Iterator;
 import java.util.Vector;
 
 import org.molgenis.util.Entity;
@@ -10,6 +9,8 @@ import org.molgenis.util.Entity;
  */
 public class EntityTuple extends AbstractTuple
 {
+	private static final long serialVersionUID = 1L;
+
 	private final Entity entity;
 	private transient Vector<String> cachedFields;
 
@@ -26,9 +27,9 @@ public class EntityTuple extends AbstractTuple
 	}
 
 	@Override
-	public Iterator<String> getColNames()
+	public Iterable<String> getColNames()
 	{
-		return getFields().iterator();
+		return getFields();
 	}
 
 	@Override
