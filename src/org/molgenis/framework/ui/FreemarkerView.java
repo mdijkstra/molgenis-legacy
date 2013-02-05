@@ -99,9 +99,6 @@ public class FreemarkerView extends SimpleScreenView<ScreenModel>
 				// load templates from plugins, can be anywere
 				// (nb this method is deprecated but I can't see why)
 				loaders.add(new ClassTemplateLoader());
-				
-				//file
-				loaders.add(new FileTemplateLoader());
 
 				for (Entry<String, Object> entry : templateArgs.entrySet())
 				{

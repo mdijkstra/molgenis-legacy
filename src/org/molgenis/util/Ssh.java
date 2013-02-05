@@ -103,11 +103,6 @@ public class Ssh
 
 			if (isAuthenticated == false)
 			{
-				isAuthenticated = conn.authenticateWithPublicKey(username, new File("~/.ssh/clusterKey_dsa"), password);
-			}
-
-			if (isAuthenticated == false)
-			{
 				throw new IOException("Authentication failed.");
 			}
 
