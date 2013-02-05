@@ -69,9 +69,11 @@ public class ExcelSheetReader implements TupleReader
 	public Iterator<Tuple> iterator()
 	{
 		final Iterator<Row> it = sheet.iterator();
+		if (!it.hasNext()) return Collections.<Tuple> emptyList().iterator();
 
 		// create column header index once and reuse
-		final Map<String, Integer> colNamesMap = hasHeader && it.hasNext() ? toColNamesMap(it.next()) : null;
+		final Map<String, Integer> colNamesMap = hasHeader ? (this.colNamesMap == null ? toColNamesMap(it.next())
+				: this.colNamesMap) : null;
 
 		return new Iterator<Tuple>()
 		{
